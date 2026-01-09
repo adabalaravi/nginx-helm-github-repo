@@ -18,12 +18,12 @@ jobs:
 
     - uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-eks-deploy-role
-        aws-region: ap-south-1
+        role-to-assume: arn:aws:iam::387030538435:role/Githubactions
+        aws-region: us-west-2
 
     - uses: azure/setup-kubectl@v4
     - uses: azure/setup-helm@v4
 
     - run: |
-        aws eks update-kubeconfig --name my-eks-cluster --region ap-south-1
-        helm upgrade --install nginx ./helm/myapp           --namespace nginx           --create-namespace           --values ./helm/myapp/values-prod.yaml
+        aws eks update-kubeconfig --name vault-eks-cluster --region us-west-2
+        helm upgrade --install nginx ./helm/myapp --namespace nginx --create-namespace --values ./helm/myapp/values-prod.yaml
