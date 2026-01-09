@@ -1,0 +1,43 @@
+name: 'AI Issue Helper'
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+  models: read # Required permission for GitHub models
+
+jobs:
+  check-issue-details:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch issue details
+        id: fetch_issue
+        run: |
+          echo "ISSUE_TITLE=$(jq -r '.issue.title' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+          echo "ISSUE_BODY=$(jq -r '.issue.body' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Call AI model for analysis
+        id: inference
+        uses: actions/ai-inference@v1
+        with:
+          prompt: |
+            Analyze the following issue to determine if sufficient information for a bug reproduction is provided.
+            Return "pass" if sufficient, otherwise request more details.
+            Title: ${{ env.ISSUE_TITLE }}
+            Body: ${{ env.ISSUE_BODY }}
+          model: openai/gpt-4o-mini
+
+      - name: Comment if more info is needed
+        if: steps.inference.outputs.response != 'pass'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: ${{ steps.inference.outputs.response }}
+            });
