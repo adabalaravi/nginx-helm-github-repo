@@ -1,0 +1,29 @@
+name: Deploy NGINX Helm to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-eks-deploy-role
+        aws-region: ap-south-1
+
+    - uses: azure/setup-kubectl@v4
+    - uses: azure/setup-helm@v4
+
+    - run: |
+        aws eks update-kubeconfig --name my-eks-cluster --region ap-south-1
+        helm upgrade --install nginx ./helm/myapp           --namespace nginx           --create-namespace           --values ./helm/myapp/values-prod.yaml
