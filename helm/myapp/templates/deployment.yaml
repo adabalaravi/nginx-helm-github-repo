@@ -1,19 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-nginx
+  name: {{ .Release.Name }}-{{ .Values.deployment.name }}
+  labels:
+    app: nginx
+    track: {{ .Values.deployment.name }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.deployment.replicaCount }}
   selector:
     matchLabels:
       app: nginx
+      track: {{ .Values.deployment.name }}
   template:
     metadata:
       labels:
         app: nginx
+        track: {{ .Values.deployment.name }}
     spec:
       containers:
         - name: nginx
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: nginx:1.25
           ports:
             - containerPort: 80

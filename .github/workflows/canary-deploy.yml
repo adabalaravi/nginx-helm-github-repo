@@ -1,0 +1,51 @@
+name: Canary Deploy to EKS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  CLUSTER_NAME: vault-eks-cluster
+  AWS_REGION: us-west-2
+  NAMESPACE: nginx
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::387030538435:role/Githubactions
+        aws-region: ${{ env.AWS_REGION }}
+
+    - uses: azure/setup-kubectl@v4
+    - uses: azure/setup-helm@v4
+
+    - name: Configure kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+          --name $CLUSTER_NAME \
+          --region $AWS_REGION
+
+    # 1️⃣ Deploy Stable
+    - name: Deploy Stable
+      run: |
+        helm upgrade --install nginx-stable ./helm/myapp \
+          --namespace $NAMESPACE \
+          --create-namespace \
+          --values ./helm/myapp/values.yaml \
+          --atomic
+
+    # 2️⃣ Deploy Canary
+    - name: Deploy Canary
+      run: |
+        helm upgrade --install nginx-canary ./helm/myapp \
+          --namespace $NAMESPACE \
+          --values ./helm/myapp/values-canary.yaml \
+          --atomic

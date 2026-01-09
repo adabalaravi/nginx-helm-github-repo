@@ -19,3 +19,8 @@ resources:
 
 ingress:
   enabled: false
+
+deployment:
+  name: stable
+  replicaCount: 3
+  weight: 90

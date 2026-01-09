@@ -1,0 +1,4 @@
+deployment:
+  name: canary
+  replicaCount: 1
+  weight: 10
